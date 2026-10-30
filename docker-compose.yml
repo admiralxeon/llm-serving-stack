@@ -1,0 +1,41 @@
+services:
+  vllm:
+    # Pinned tag, never :latest. Rollback = change this line back and `docker compose up -d`.
+    image: vllm/vllm-openai:v0.31.0
+    container_name: vllm
+    command:
+      - Qwen/Qwen2.5-1.5B-Instruct
+      # Pinned Hugging Face commit, so a re-download can never silently change the weights.
+      - --revision=989aa7980e4cf806f80c7fef2b1adb7bc71aa306
+      # The name clients put in "model": "..." (decoupled from the HF repo name).
+      - --served-model-name=qwen2.5-1.5b
+      - --gpu-memory-utilization=${VLLM_GPU_MEM:-0.60}
+      # Longest prompt + answer one request may have. Smaller = less KV cache per sequence.
+      - --max-model-len=4096
+      # Max sequences batched together per step. Extra requests wait in vLLM's queue.
+      - --max-num-seqs=16
+      - --api-key=${VLLM_API_KEY}
+    environment:
+      HF_HOME: /root/.cache/huggingface
+    volumes:
+      # Weights cached on E:, so container restarts don't re-download 3 GB.
+      - ./data/hf-cache:/root/.cache/huggingface
+    ports:
+      - "8000:8000"
+    # PyTorch workers share tensors through /dev/shm; Docker's 64 MB default is too small.
+    shm_size: 2gb
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      # Must cover a cold start: first weight download + loading + CUDA graph capture.
+      start_period: 600s
+    restart: unless-stopped

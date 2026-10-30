@@ -1,0 +1,14 @@
+# Secrets: only .env.example is committed
+.env
+
+# Model weights and Docker volumes (large, re-downloadable)
+data/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Load test output
+results/*.csv
+results/*.html
