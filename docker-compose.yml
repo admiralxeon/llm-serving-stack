@@ -11,9 +11,9 @@ services:
       - --served-model-name=qwen2.5-1.5b
       - --gpu-memory-utilization=${VLLM_GPU_MEM:-0.60}
       # Longest prompt + answer one request may have. Smaller = less KV cache per sequence.
-      - --max-model-len=4096
+      - --max-model-len=${VLLM_MAX_LEN:-4096}
       # Max sequences batched together per step. Extra requests wait in vLLM's queue.
-      - --max-num-seqs=16
+      - --max-num-seqs=${VLLM_MAX_SEQS:-16}
       - --api-key=${VLLM_API_KEY}
     environment:
       HF_HOME: /root/.cache/huggingface
