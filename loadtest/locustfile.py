@@ -20,6 +20,8 @@ from locust import HttpUser, constant, events, task
 TARGET = os.environ.get("TARGET", "vllm")
 LABEL = os.environ.get("LABEL", "baseline")
 MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "200"))
+# Keep generating to MAX_TOKENS even if the model wants to stop. vLLM only (not via LiteLLM).
+IGNORE_EOS = os.environ.get("IGNORE_EOS") == "1"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 RESULTS_FILE = PROJECT_ROOT / "results" / "RESULTS.md"
 SECRETS = dict(
@@ -74,6 +76,8 @@ class ChatUser(HttpUser):
             "stream": True,
             "stream_options": {"include_usage": True},
         }
+        if IGNORE_EOS:
+            body["ignore_eos"] = True
         start = time.perf_counter()
         first_token_at = None
         usage_tokens = 0
