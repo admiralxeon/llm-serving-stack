@@ -4,13 +4,14 @@ services:
     image: vllm/vllm-openai:v0.31.0
     container_name: vllm
     command:
-      - Qwen/Qwen2.5-1.5B-Instruct
+      - ${VLLM_MODEL:-Qwen/Qwen2.5-1.5B-Instruct}
       # Pinned Hugging Face commit, so a re-download can never silently change the weights.
-      - --revision=989aa7980e4cf806f80c7fef2b1adb7bc71aa306
+      - --revision=${VLLM_REVISION:-989aa7980e4cf806f80c7fef2b1adb7bc71aa306}
       # The name clients put in "model": "..." (decoupled from the HF repo name).
-      - --served-model-name=qwen2.5-1.5b
+      - --served-model-name=${VLLM_SERVED_NAME:-qwen2.5-1.5b}
       - --gpu-memory-utilization=${VLLM_GPU_MEM:-0.60}
-      # Longest prompt + answer one request may have. Smaller = less KV cache per sequence.
+      # Longest prompt + answer one request may have. A cap, not a reservation: memory is
+      # used per token generated, so short requests perform the same at 2k or 8k.
       - --max-model-len=${VLLM_MAX_LEN:-4096}
       # Max sequences batched together per step. Extra requests wait in vLLM's queue.
       - --max-num-seqs=${VLLM_MAX_SEQS:-16}

@@ -37,6 +37,7 @@ TARGETS = {
     "gateway": ("http://localhost:4000", SECRETS["LITELLM_MASTER_KEY"], "chat"),
 }
 HOST, API_KEY, MODEL = TARGETS[TARGET]
+MODEL = os.environ.get("MODEL", MODEL)
 
 PROMPTS = [
     "Explain in about 150 words how a power rectifier converts AC to DC.",
