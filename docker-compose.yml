@@ -169,6 +169,31 @@ services:
       - prometheus
     restart: unless-stopped
 
+  # FastAPI RAG app. Talks to models only through LiteLLM, with its own key.
+  rag:
+    build: ./rag
+    image: llm-serving-demo/rag:0.1.0
+    container_name: rag
+    environment:
+      DATABASE_URL: postgresql://llm:${POSTGRES_PASSWORD}@postgres:5432/rag
+      LITELLM_URL: http://litellm:4000
+      LITELLM_KEY: ${RAG_LITELLM_KEY}
+      MAX_IN_FLIGHT: ${RAG_MAX_IN_FLIGHT:-16}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      litellm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
 volumes:
   pgdata:
   prometheus-data:
