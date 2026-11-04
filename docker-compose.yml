@@ -121,5 +121,55 @@ services:
       start_period: 60s
     restart: unless-stopped
 
+  # Reads GPU numbers by running nvidia-smi. DCGM is poorly supported on WSL2;
+  # on a real Linux server, use NVIDIA's DCGM exporter instead.
+  gpu-exporter:
+    image: utkuozdemir/nvidia_gpu_exporter:1.16.0
+    container_name: gpu-exporter
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    container_name: prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.1.9
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # Don't download plugins at startup: a private server shouldn't need the internet.
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    volumes:
+      # Provisioned from files, so the dashboard lives in git and rebuilds itself.
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  prometheus-data:
+  grafana-data:

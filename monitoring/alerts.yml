@@ -1,0 +1,13 @@
+groups:
+  - name: llm-serving
+    rules:
+      # More requests waiting than half our 16 slots, for a full minute: users are queuing,
+      # not just hitting a brief burst. In testing, a queue of 17 meant about 2.4 s to first token.
+      - alert: VLLMQueueBacklog
+        expr: vllm:num_requests_waiting > 8
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "vLLM has {{ $value }} requests waiting"
+          description: "Sustained queue. Check for a runaway client, then consider raising --max-num-seqs (watch KV cache and preemptions) or adding capacity."

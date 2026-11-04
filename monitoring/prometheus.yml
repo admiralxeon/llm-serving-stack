@@ -1,0 +1,17 @@
+global:
+  # How often Prometheus reads every target. Short, because queues build within seconds.
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  # vLLM's own numbers: queue, KV cache, tokens, latency histograms.
+  - job_name: vllm
+    static_configs:
+      - targets: ["vllm:8000"]
+  # GPU numbers from nvidia-smi. On a real Linux server this would be DCGM exporter.
+  - job_name: gpu
+    static_configs:
+      - targets: ["gpu-exporter:9835"]
