@@ -91,6 +91,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      # Crash recovery after an unclean shutdown took about 130 s in testing.
+      start_period: 240s
     restart: unless-stopped
 
   litellm:

@@ -97,6 +97,7 @@ Start with `docker compose logs vllm` and `nvidia-smi`. A restart loop hides the
 | `Free memory on device ... is less than desired GPU memory utilization` | The share asked for exceeds free VRAM (failed at 0.97 with 6.96 GiB free) | Lower `VLLM_GPU_MEM`, or free the VRAM other programs hold |
 | `No available memory for the cache blocks` | Budget too small for weights plus KV cache (failed at 0.30) | Raise `VLLM_GPU_MEM`, or use a smaller or quantized model |
 | Restart count climbing | `restart: unless-stopped` re-runs a bad config forever | Fix the config. Restarting won't help |
+| Postgres "unhealthy" after the PC shut down without stopping the stack | Crash recovery (about 130 s here) | Wait for recovery. Its health check now allows 240 s to start |
 | Latency spikes, no errors, KV cache near 100% | Preemption: vLLM is throwing out work to redo later | Lower `--max-num-seqs`, cap `max_tokens`, or add memory |
 | `vllm:num_requests_waiting` stays high | More demand than slots | Raise `--max-num-seqs` while watching KV cache, or add capacity |
 
@@ -197,6 +198,8 @@ Retrieval, on 20 hand-written questions about one private 6-page PDF:
 | 3B AWQ | Hybrid | 13/16 | 16/16 | 0.71 | 10/16 | 4/4 |
 
 This set is small, written after reading the document, and scored by keywords, so it compares options here and doesn't measure general accuracy. The 3B model guessed less but didn't answer more. Both failed the same hard questions, which suggests PDF extraction is the next thing to fix, as text from diagrams comes out fragmented. Questions are in `data/rag_eval.json`, which is not in git because it quotes that document.
+
+Refusals are not reliable. With this README loaded as the document, "What is the capital of France?" got "Paris", though the same question was refused in the evaluation with the PDF loaded.
 
 ## Monitoring
 
