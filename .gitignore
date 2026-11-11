@@ -12,3 +12,7 @@ __pycache__/
 # Load test output
 results/*.csv
 results/*.html
+
+# Written on the host by the LLM platform's Ansible playbook.
+.litellm-key-*
+monitoring/host/scrape-*.yml

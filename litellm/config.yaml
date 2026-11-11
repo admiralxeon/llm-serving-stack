@@ -1,6 +1,11 @@
 # LiteLLM gateway config. Apps only ever ask for "chat" or "embed";
 # which backend serves them is decided here, not in app code.
 
+# Versions registered in the LLM platform's model registry are generated into this file and
+# appended to model_list. Hand-written deployments stay below.
+include:
+  - models.generated.yaml
+
 model_list:
   # Primary chat: vLLM on the GPU. Reached over Docker's internal network by service name.
   - model_name: chat
@@ -71,6 +76,10 @@ router_settings:
   cooldown_time: 30
 
 litellm_settings:
+  # Spans go to Tempo (see OTEL_* in docker-compose.yml).
+  callbacks: ["otel"]
+  # Keep prompts and answers out of traces and logs: they can hold anything users typed.
+  turn_off_message_logging: true
   # Hard ceiling on any request, including fallbacks.
   request_timeout: 240
   drop_params: true

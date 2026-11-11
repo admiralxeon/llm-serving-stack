@@ -155,8 +155,14 @@ services:
       DATABASE_URL: postgresql://llm:${POSTGRES_PASSWORD}@postgres:5432/litellm
       VLLM_API_KEY: ${VLLM_API_KEY}
       STORE_MODEL_IN_DB: "False"
+      # Traces to Tempo. LiteLLM reads the caller's `traceparent`, so its spans join the
+      # LLM platform's traces.
+      OTEL_EXPORTER: otlp_http
+      OTEL_ENDPOINT: http://tempo:4318/v1/traces
+      OTEL_SERVICE_NAME: litellm
     volumes:
       - ./litellm/config.yaml:/app/config.yaml:ro
+      - ./litellm/models.generated.yaml:/app/models.generated.yaml:ro
     ports:
       # The one port the LAN talks to.
       - "4000:4000"
@@ -196,6 +202,9 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      # The LLM platform repo, checked out next to this one (the Ansible playbook does this).
+      - ${PLATFORM_DIR:-../llm-platform-api}/monitoring/prometheus:/etc/prometheus/platform:ro
+      - ./monitoring/host:/etc/prometheus/host:ro
       - prometheus-data:/prometheus
     ports:
       - "127.0.0.1:9090:9090"
@@ -213,11 +222,24 @@ services:
       # Provisioned from files, so the dashboard lives in git and rebuilds itself.
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ${PLATFORM_DIR:-../llm-platform-api}/monitoring/grafana:/var/lib/grafana/dashboards-platform:ro
       - grafana-data:/var/lib/grafana
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
       - prometheus
+      - tempo
+    restart: unless-stopped
+
+  # Trace storage for the LLM platform and LiteLLM. OTLP in on 4318 (HTTP) and 4317 (gRPC),
+  # Grafana reads on 3200. Only reachable on the Docker network.
+  tempo:
+    image: grafana/tempo:2.10.10
+    container_name: tempo
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./monitoring/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/var/tempo
     restart: unless-stopped
 
   # FastAPI RAG app. Talks to models only through LiteLLM, with its own key.
@@ -249,3 +271,4 @@ volumes:
   pgdata:
   prometheus-data:
   grafana-data:
+  tempo-data:

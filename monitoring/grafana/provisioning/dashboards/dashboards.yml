@@ -4,3 +4,9 @@ providers:
     type: file
     options:
       path: /var/lib/grafana/dashboards
+  # The LLM platform's dashboard lives in that repo (monitoring/grafana/platform.json) and is
+  # mounted here, so it's versioned with the code that emits its metrics.
+  - name: llm-platform
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards-platform

@@ -28,8 +28,9 @@ This PC only:
 | litellm | `litellm/litellm-database:v1.105.7` | Gateway: per-app keys, RPM limits, timeouts, routing, fallback |
 | postgres | `pgvector/pgvector:0.8.7-pg17-bookworm` | LiteLLM's records and the RAG vectors |
 | gpu-exporter | `utkuozdemir/nvidia_gpu_exporter:1.16.0` | GPU metrics from `nvidia-smi` |
-| prometheus | `prom/prometheus:v3.15.1` | Collects metrics, evaluates the alert |
-| grafana | `grafana/grafana:13.1.9` | Dashboard, provisioned from files |
+| prometheus | `prom/prometheus:v3.15.1` | Collects metrics and evaluates alerts, including the LLM platform's scrape jobs and alerts, mounted from `${PLATFORM_DIR:-../llm-platform-api}/monitoring/prometheus` |
+| grafana | `grafana/grafana:13.1.9` | Dashboards provisioned from files: this stack's, and the LLM platform's from its repo. Prometheus and Tempo datasources |
+| tempo | `grafana/tempo:2.10.10` | Traces from the LLM platform and LiteLLM over OTLP. Kept for 3 days |
 | rag | built from `rag/` | FastAPI: `/ingest`, `/ask`, `/search`, `/health` |
 
 Only port 4000 is open to the LAN. vLLM's key is known only to LiteLLM, and each app gets its own LiteLLM key.

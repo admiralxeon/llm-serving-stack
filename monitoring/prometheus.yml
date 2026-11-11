@@ -5,6 +5,14 @@ global:
 
 rule_files:
   - /etc/prometheus/alerts.yml
+  # The LLM platform's alerts, mounted from its repo (monitoring/prometheus/).
+  - /etc/prometheus/platform/*-alerts.yml
+
+# The LLM platform's scrape jobs (API replicas and worker), mounted from its repo.
+scrape_config_files:
+  - /etc/prometheus/platform/scrape-*.yml
+  # Host-specific jobs, such as the DCGM exporter the Ansible playbook adds on Linux.
+  - /etc/prometheus/host/scrape-*.yml
 
 scrape_configs:
   # vLLM's own numbers: queue, KV cache, tokens, latency histograms.
