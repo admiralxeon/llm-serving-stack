@@ -4,6 +4,8 @@ A small, working copy of a private LLM server: vLLM on the GPU, a LiteLLM gatewa
 
 Every number here was measured on this machine, and each is one run unless stated otherwise. They show how the system behaves, not what a production server would do.
 
+A companion repo, **LLM Platform API**, sits in front of this stack: a multi-tenant FastAPI control plane with tenant keys, a GPU-aware admission queue, RAG, a model registry with canary and rollback, and the Prometheus, Grafana and Tempo setup this stack loads. It's private for now.
+
 ## Architecture
 
 ```
