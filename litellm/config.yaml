@@ -39,6 +39,27 @@ model_list:
     model_info:
       mode: embedding
 
+  # LLM platform RAG: bge-small-en-v1.5 (384 dimensions) on TEI, through TEI's
+  # OpenAI-compatible /v1/embeddings.
+  - model_name: embed-small
+    litellm_params:
+      model: openai/BAAI/bge-small-en-v1.5
+      api_base: http://tei-embed:80/v1
+      # TEI has no auth of its own; it's only reachable on the Docker network.
+      api_key: "none"
+      timeout: 30
+    model_info:
+      mode: embedding
+
+  # LLM platform RAG: bge-reranker-base on TEI. The huggingface provider calls TEI's /rerank.
+  - model_name: rerank
+    litellm_params:
+      model: huggingface/BAAI/bge-reranker-base
+      api_base: http://tei-rerank:80
+      timeout: 30
+    model_info:
+      mode: rerank
+
 router_settings:
   # If "chat" fails (down, timeout, 5xx), retry the request on "chat-fallback".
   fallbacks:

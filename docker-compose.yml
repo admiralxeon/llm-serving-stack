@@ -73,6 +73,55 @@ services:
     entrypoint: ["sh", "-c", "ollama pull nomic-embed-text && ollama pull qwen2.5:1.5b"]
     restart: "no"
 
+  # Embeddings for the LLM platform's RAG: bge-small-en-v1.5, 384 dimensions.
+  # The "86-" tag is TEI built for Ampere (sm_86, the RTX 3060 Ti).
+  tei-embed:
+    image: ghcr.io/huggingface/text-embeddings-inference:86-1.9.4
+    container_name: tei-embed
+    command:
+      - --model-id=BAAI/bge-small-en-v1.5
+      # Pinned Hugging Face commit, as with vLLM.
+      - --revision=5c38ec7c405ec4b44b94cc5a9bb96e735b38267a
+      # Cut inputs at the model's 512 tokens instead of rejecting them.
+      - --auto-truncate
+      # Caps the warm-up batch, which sets how much VRAM TEI holds next to vLLM.
+      - --max-batch-tokens=${TEI_MAX_BATCH_TOKENS:-4096}
+      - --max-client-batch-size=64
+    volumes:
+      - ./data/tei-cache:/data
+    ports:
+      - "127.0.0.1:8081:80"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # Reranker for the platform's RAG: bge-reranker-base, a cross-encoder.
+  tei-rerank:
+    image: ghcr.io/huggingface/text-embeddings-inference:86-1.9.4
+    container_name: tei-rerank
+    command:
+      - --model-id=BAAI/bge-reranker-base
+      - --revision=2cfc18c9415c912f9d8155881c133215df768a70
+      - --auto-truncate
+      - --max-batch-tokens=${TEI_MAX_BATCH_TOKENS:-4096}
+    volumes:
+      - ./data/tei-cache:/data
+    ports:
+      - "127.0.0.1:8082:80"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
   postgres:
     image: pgvector/pgvector:0.8.7-pg17-bookworm
     container_name: postgres

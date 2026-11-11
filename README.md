@@ -23,6 +23,8 @@ This PC only:
 | vllm | `vllm/vllm-openai:v0.31.0` | Serves Qwen2.5-1.5B-Instruct on the GPU |
 | ollama | `ollama/ollama:0.40.13` | CPU only: backup chat model and `nomic-embed-text` |
 | ollama-pull | same as ollama | One-time job that downloads Ollama's models |
+| tei-embed | `ghcr.io/huggingface/text-embeddings-inference:86-1.9.4` | `bge-small-en-v1.5` embeddings on the GPU (215 MiB), served as `embed-small` |
+| tei-rerank | same as tei-embed | `bge-reranker-base` reranker on the GPU (589 MiB), served as `rerank` |
 | litellm | `litellm/litellm-database:v1.105.7` | Gateway: per-app keys, RPM limits, timeouts, routing, fallback |
 | postgres | `pgvector/pgvector:0.8.7-pg17-bookworm` | LiteLLM's records and the RAG vectors |
 | gpu-exporter | `utkuozdemir/nvidia_gpu_exporter:1.16.0` | GPU metrics from `nvidia-smi` |
