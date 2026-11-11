@@ -11,8 +11,19 @@ model_list:
       # Give up on vLLM after this long (seconds) and let the fallback take over.
       timeout: 60
       stream_timeout: 30
+      order: 1
+
+  # Same "chat" group, lower priority. Health-check routing can only skip a deployment if
+  # another one remains in its group, so this is what lets a dead vLLM be bypassed at once.
+  - model_name: chat
+    litellm_params:
+      model: ollama_chat/qwen2.5:1.5b
+      api_base: http://ollama:11434
+      timeout: 180
+      order: 2
 
   # Backup chat: same model family on Ollama, CPU only. Slower, but keeps "chat" alive.
+  # Still needed for requests that hit vLLM before a health check has noticed it's down.
   - model_name: chat-fallback
     litellm_params:
       model: ollama_chat/qwen2.5:1.5b
@@ -51,3 +62,6 @@ general_settings:
   # Probe every backend in the background so /health shows which are up.
   background_health_checks: true
   health_check_interval: 30
+  # Skip deployments the latest health check found unhealthy, instead of waiting for a
+  # live request to fail first.
+  enable_health_check_routing: true
