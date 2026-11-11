@@ -91,7 +91,9 @@ general_settings:
   database_url: os.environ/DATABASE_URL
   # Probe every backend in the background so /health shows which are up.
   background_health_checks: true
-  health_check_interval: 30
+  # Requests routed to vLLM before a check notices it's dead wait out its 60 s timeout
+  # (LLM platform E6), so a shorter interval means fewer stuck requests.
+  health_check_interval: 10
   # Skip deployments the latest health check found unhealthy, instead of waiting for a
   # live request to fail first.
   enable_health_check_routing: true
